@@ -34,9 +34,6 @@ import edu.upc.eetac.dsa.AlfVarRom.libro.api.modelos.LibrosCollection;
 @Path("/libros")
 public class LibrosResource {
 	private DataSource ds = DataSourceSPA.getInstance().getDataSource();
-	@Context
-	private SecurityContext security;
-
 	private String GET_LIBROS_BY_ID_QUERY = "select * from libros where idlibro=?";
 
 	private Libros getLibroFromDatabase(String idlibros) {
@@ -90,25 +87,14 @@ public class LibrosResource {
 	public Response getlibro(@PathParam("idlibros") String idlibros,
 			@Context Request request) {
 		// Create CacheControl
-
 		CacheControl cc = new CacheControl();
 		Libros libros = getLibroFromDatabase(idlibros);
-		// Calculate the ETag on last modified date of user resource
 		EntityTag eTag = new EntityTag(Long.toString(libros.getLastmodified()));
-		// Verify if it matched with etag available in http request
 		Response.ResponseBuilder rb = request.evaluatePreconditions(eTag);
-
-		// If ETag matches the rb will be non-null;
-		// Use the rb to return the response without any further processing
 		if (rb != null) {
 			return rb.cacheControl(cc).tag(eTag).build();
 		}
-
-		// If rb is null then either it is first time request; or resource is
-		// modified
-		// Get the updated representation and return with Etag attached to it
 		rb = Response.ok(libros).cacheControl(cc).tag(eTag);
-
 		return rb.build();
 	}
 
